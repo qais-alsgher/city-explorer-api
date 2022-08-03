@@ -10,28 +10,37 @@ app.use(cors());
 // console.log(app)
 const port = process.env.PORT || 3001;
 
-const list = ['Mohammed', 'Malek', 'Bayan', 'Fatima', 'Waleed'];
+const weatherData= require('./data/weather.json');
 
-app.get('/', (req, res) => {
-  res.send('Hello, this the first server side')
-})
+app.get('/weather',(req,res)=>{
 
-app.get('/names', (req, res) => {
-  res.send(list)
-})
+let searchQuery=req.query.searchQuery;
 
-app.get('/userlist', (req, res) => {
-  console.log(req.query.name);
-  res.json({'listOfName': list})
-})
+const city = weatherData.find(ele=> ele.city_name.toLowerCase() === searchQuery.toLowerCase());
+// console.log(city);
+try{
+const weatherArr = city.data.map(items =>new Forecast(items));
+console.log(weatherArr);
+res.send(weatherArr);
+}catch(error){
 
-app.get('/sendstatus', (req, res) => {
-  res.status(200).json({'listOfName': list})
-})
+handleError(error,res);
+}
+}
+);
 
-app.get('*', (req, res) => {
-  res.json({'error': 'Page not found!'})
-})
+function handleError(error,res){
+res.status(500).send("the city dose not have data for weather for server");
+
+}
+
+class Forecast{
+  constructor(day){
+this.description= day.weather.description;
+this.date= day.valid_date;
+  }
+}
+
 
 app.listen(port, () => {
   console.log(`Listening to port ${port}`)
